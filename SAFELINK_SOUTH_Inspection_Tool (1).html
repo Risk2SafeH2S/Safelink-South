@@ -1,0 +1,1013 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAFELINK SOUTH — Multi-State OSH Inspection Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#10151C; --ink-2:#2A3340; --steel:#63707F; --hair:#D5DAE0;
+  --panel:#F2F4F2; --surface:#FFFFFF; --sunk:#E7EAE7;
+  --mand:#1B4E8C;      /* ISO 7010 mandatory blue - the action colour */
+  --mand-tint:#E8EFF7;
+  --safe:#2E7D4F;      /* ISO safe condition */
+  --warn:#D98200;      /* ISO warning */
+  --stop:#C1272D;      /* ISO prohibition */
+  --safe-t:#E6F2EB; --warn-t:#FCF1DE; --stop-t:#FAE9E9;
+  --r:3px;
+  --shadow:0 1px 0 rgba(16,21,28,.06), 0 2px 8px rgba(16,21,28,.05);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--panel); color:var(--ink);
+  font:400 15px/1.55 "IBM Plex Sans",system-ui,sans-serif;
+}
+h1,h2,h3,h4{font-family:Archivo,system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2.5px solid var(--mand);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- masthead ---------- */
+.mast{background:var(--ink);color:#fff;padding:14px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.mark{font-family:Archivo;font-weight:800;font-size:19px;letter-spacing:.14em;line-height:1}
+.mark span{color:#7FB0E8}
+.mast .sub{font-size:11.5px;color:#95A3B3;letter-spacing:.09em;text-transform:uppercase;font-weight:500}
+.mast .sp{flex:1}
+.mast .rev{font-size:11px;color:#7A8899}
+
+/* ---------- state spine (signature) ---------- */
+.spine-wrap{background:var(--ink-2);padding:0 20px 18px}
+.spine-lbl{color:#8FA0B2;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;padding:14px 0 9px}
+.spine{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.stile{
+  background:#1A222D;border:1.5px solid #2E3B4A;color:#C4CFDA;border-radius:var(--r);
+  padding:11px 9px;text-align:left;transition:background .18s,border-color .18s,transform .18s;
+}
+.stile:hover{background:#212C39;border-color:#41556B}
+.stile .ab{font-family:Archivo;font-weight:800;font-size:20px;letter-spacing:.02em;display:block;line-height:1}
+.stile .nm{font-size:10.5px;letter-spacing:.04em;color:#7C8B9C;display:block;margin-top:4px}
+.stile[aria-pressed="true"]{background:var(--mand);border-color:#3E7CC4;color:#fff;transform:translateY(-2px)}
+.stile[aria-pressed="true"] .nm{color:#C6DDF5}
+@media(max-width:760px){.spine{grid-template-columns:repeat(3,1fr)}}
+
+/* ---------- shell ---------- */
+.shell{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:296px 1fr;gap:20px;align-items:start}
+@media(max-width:1080px){.shell{grid-template-columns:1fr}}
+.rail{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
+@media(max-width:1080px){.rail{position:static}}
+
+.card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);box-shadow:var(--shadow)}
+.card>h3{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--steel);
+  padding:11px 14px;border-bottom:1px solid var(--hair);font-weight:700}
+.card .bd{padding:14px}
+
+/* regime stack */
+.reg{border-left:3px solid var(--mand);background:var(--mand-tint);padding:9px 11px;margin-bottom:7px;border-radius:0 var(--r) var(--r) 0;
+  animation:slot .32s cubic-bezier(.22,1,.36,1) both}
+.reg:nth-child(1){animation-delay:.02s}.reg:nth-child(2){animation-delay:.06s}.reg:nth-child(3){animation-delay:.1s}
+.reg:nth-child(4){animation-delay:.14s}.reg:nth-child(5){animation-delay:.18s}.reg:nth-child(6){animation-delay:.22s}
+.reg:nth-child(7){animation-delay:.26s}.reg:nth-child(8){animation-delay:.3s}
+@keyframes slot{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.reg b{display:block;font-size:12.5px;font-weight:600;line-height:1.35}
+.reg em{font-style:normal;display:block;font-size:10.5px;color:var(--steel);letter-spacing:.05em;text-transform:uppercase;font-weight:600;margin-bottom:3px}
+.reg i{font-style:normal;display:block;font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+
+/* score */
+.gauge{text-align:center;padding:16px 14px 12px}
+.gauge .num{font-family:Archivo;font-weight:800;font-size:52px;line-height:.9;letter-spacing:-.03em}
+.gauge .pc{font-size:20px;font-weight:600;color:var(--steel)}
+.gauge .band{display:inline-block;margin-top:9px;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:5px 11px;border-radius:2px}
+.gauge .cov{font-size:11px;color:var(--steel);margin-top:8px}
+.tally{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--hair)}
+.tally div{padding:9px 4px;text-align:center;border-right:1px solid var(--hair)}
+.tally div:last-child{border-right:0}
+.tally b{display:block;font-family:Archivo;font-weight:800;font-size:19px}
+.tally span{font-size:9.5px;letter-spacing:.09em;color:var(--steel);font-weight:600}
+.crit{background:var(--stop);color:#fff;padding:9px 12px;font-size:11.5px;font-weight:600;line-height:1.4}
+
+.mbar{padding:7px 14px}
+.mbar .t{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px}
+.mbar .t b{font-weight:600}.mbar .t span{color:var(--steel);font-variant-numeric:tabular-nums}
+.track{height:5px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.track i{display:block;height:100%;transition:width .45s cubic-bezier(.22,1,.36,1)}
+
+/* buttons */
+.btn{background:var(--mand);color:#fff;border:0;border-radius:var(--r);padding:11px 16px;font-weight:600;font-size:13.5px;width:100%;
+  letter-spacing:.02em;transition:filter .15s}
+.btn:hover{filter:brightness(1.13)}
+.btn[disabled]{background:var(--steel);cursor:not-allowed;filter:none}
+.btn.ghost{background:transparent;color:var(--mand);border:1.5px solid var(--hair)}
+.btn.ghost:hover{background:var(--mand-tint);filter:none}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+
+/* ---------- main ---------- */
+.hdrgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:820px){.hdrgrid{grid-template-columns:repeat(2,1fr)}}
+label.f{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--steel);font-weight:700;margin-bottom:4px}
+input.f,select.f,textarea.f{width:100%;padding:8px 9px;border:1px solid var(--hair);border-radius:var(--r);
+  font:400 13.5px/1.4 "IBM Plex Sans",sans-serif;background:var(--surface);color:var(--ink)}
+input.f:focus,select.f:focus,textarea.f:focus{border-color:var(--mand);outline:none;box-shadow:0 0 0 3px var(--mand-tint)}
+
+.mods{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1.5px solid var(--hair);background:var(--surface);border-radius:20px;padding:6px 13px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.locked{background:var(--mand-tint);border-color:#B9D0E8;color:var(--mand);cursor:default;font-weight:600}
+
+/* sections */
+.sec{margin-bottom:12px}
+.sechd{width:100%;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--hair);
+  border-radius:var(--r);padding:12px 14px;text-align:left;box-shadow:var(--shadow)}
+.sechd .ix{font-family:"IBM Plex Mono";font-size:11px;font-weight:600;color:#fff;background:var(--ink-2);
+  padding:3px 6px;border-radius:2px;letter-spacing:.04em}
+.sechd h2{font-size:15.5px;font-weight:700;flex:1}
+.sechd .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--sunk);color:var(--steel);font-variant-numeric:tabular-nums}
+.sechd .car{color:var(--steel);font-size:12px;transition:transform .2s}
+.sechd[aria-expanded="true"] .car{transform:rotate(90deg)}
+.secbd{border:1px solid var(--hair);border-top:0;background:var(--surface);border-radius:0 0 var(--r) var(--r)}
+
+.it{padding:13px 14px;border-top:1px solid var(--hair);display:grid;grid-template-columns:1fr 280px;gap:14px}
+.it:first-child{border-top:0}
+@media(max-width:900px){.it{grid-template-columns:1fr}}
+.it.st-NC{background:var(--stop-t)} .it.st-OBS{background:var(--warn-t)} .it.st-C{background:var(--safe-t)}
+.it.st-NA{opacity:.55}
+.ref{font-family:"IBM Plex Mono";font-size:10.5px;font-weight:600;color:var(--mand);background:var(--mand-tint);
+  padding:2px 6px;border-radius:2px;display:inline-block;margin-bottom:6px}
+.ref.stt{color:#7A3E00;background:#FBEEDC}
+.req{font-size:14px;line-height:1.5;font-weight:500}
+.ev{font-size:12.5px;color:var(--steel);margin-top:5px;line-height:1.45}
+.wt{font-family:"IBM Plex Mono";font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--steel);
+  border:1px solid var(--hair);padding:1px 5px;border-radius:2px;margin-left:7px;vertical-align:2px}
+.wt.w3{color:var(--stop);border-color:#E7BFC0}
+
+.ctrl{display:flex;flex-direction:column;gap:7px}
+.stat{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sb{border:1.5px solid var(--hair);background:var(--surface);border-radius:2px;padding:6px 2px;font-size:11px;font-weight:700;
+  letter-spacing:.03em;color:var(--steel)}
+.sb:hover{border-color:var(--steel)}
+.sb[aria-pressed="true"][data-v="C"]{background:var(--safe);border-color:var(--safe);color:#fff}
+.sb[aria-pressed="true"][data-v="NC"]{background:var(--stop);border-color:var(--stop);color:#fff}
+.sb[aria-pressed="true"][data-v="OBS"]{background:var(--warn);border-color:var(--warn);color:#fff}
+.sb[aria-pressed="true"][data-v="NA"]{background:var(--steel);border-color:var(--steel);color:#fff}
+.sb[aria-pressed="true"][data-v="NV"]{background:var(--ink-2);border-color:var(--ink-2);color:#fff}
+textarea.note{min-height:52px;resize:vertical;font-size:12.5px}
+
+/* report */
+.rep{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);box-shadow:var(--shadow);margin-top:18px}
+.rephd{background:var(--ink);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;border-radius:2px 2px 0 0}
+.rephd h2{font-size:16px;flex:1}
+.repbd{padding:20px 24px;max-width:78ch}
+.repbd h1{font-size:21px;margin:22px 0 9px;padding-bottom:7px;border-bottom:2px solid var(--ink)}
+.repbd h2{font-size:17px;margin:20px 0 8px;color:var(--mand)}
+.repbd h3{font-size:14.5px;margin:16px 0 6px}
+.repbd p{margin:0 0 11px}
+.repbd ul,.repbd ol{margin:0 0 12px;padding-left:22px}
+.repbd li{margin-bottom:5px}
+.repbd table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+.repbd th,.repbd td{border:1px solid var(--hair);padding:7px 9px;text-align:left;vertical-align:top}
+.repbd th{background:var(--sunk);font-weight:600;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase}
+.repbd .first{color:var(--steel);font-size:13px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{background:var(--stop-t);border-left:3px solid var(--stop);padding:11px 14px;font-size:13px;margin:14px 0}
+
+.foot{max-width:1400px;margin:0 auto;padding:18px 20px 40px;color:var(--steel);font-size:11.5px;line-height:1.6}
+.foot b{color:var(--ink-2)}
+
+@media print{
+  .mast,.spine-wrap,.rail,.foot,.rephd button,.nprint{display:none!important}
+  .shell{grid-template-columns:1fr;padding:0}
+  .rep{border:0;box-shadow:none;margin:0}
+  body{background:#fff}
+}
+</style>
+
+<div class="mast">
+  <div>
+    <div class="mark">SAFELINK<span>&nbsp;SOUTH</span></div>
+    <div class="sub">South India Alliance for Safety, Health &amp; Emergency Response</div>
+  </div>
+  <div class="sp"></div>
+  <div class="rev">Multi-State OSH Inspection Instrument &middot; SLS-INSP-001 Rev 1.0</div>
+</div>
+
+<div class="spine-wrap">
+  <div class="spine-lbl">Step 1 &mdash; Select the state. The regulatory stack below rebuilds.</div>
+  <div class="spine" id="spine"></div>
+</div>
+
+<div class="shell">
+  <!-- ============ RAIL ============ -->
+  <div class="rail">
+    <div class="card">
+      <h3>Live regulatory stack</h3>
+      <div class="bd" id="stack"><p style="color:var(--steel);font-size:13px;margin:0">Select a state above.</p></div>
+    </div>
+
+    <div class="card">
+      <h3>Compliance score</h3>
+      <div class="gauge">
+        <div><span class="num" id="gNum">&mdash;</span><span class="pc">%</span></div>
+        <div class="band" id="gBand" style="background:var(--sunk);color:var(--steel)">Not started</div>
+        <div class="cov" id="gCov">0 of 0 applicable lines assessed</div>
+      </div>
+      <div class="tally">
+        <div><b style="color:var(--safe)" id="tC">0</b><span>C</span></div>
+        <div><b style="color:var(--stop)" id="tNC">0</b><span>NC</span></div>
+        <div><b style="color:var(--warn)" id="tOBS">0</b><span>OBS</span></div>
+        <div><b style="color:var(--steel)" id="tNA">0</b><span>NA</span></div>
+      </div>
+      <div id="critFlag"></div>
+      <div id="mbars" style="padding:8px 0 12px"></div>
+    </div>
+
+    <div class="card">
+      <h3>Output</h3>
+      <div class="bd" style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn" id="genBtn">Generate inspection report</button>
+        <div class="btnrow">
+          <button class="btn ghost" id="expBtn">Export data</button>
+          <button class="btn ghost" id="impBtn">Import data</button>
+        </div>
+        <button class="btn ghost" id="prnBtn">Print / save PDF</button>
+        <input type="file" id="impFile" accept=".json" hidden>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div>
+    <div class="card" style="margin-bottom:14px">
+      <h3>Step 2 &mdash; Establishment under inspection</h3>
+      <div class="bd">
+        <div class="hdrgrid">
+          <div><label class="f" for="mName">Establishment</label><input class="f" id="mName" placeholder="Unit name"></div>
+          <div><label class="f" for="mLoc">Location / cluster</label><input class="f" id="mLoc" placeholder="e.g. Ambattur, Chennai"></div>
+          <div><label class="f" for="mSector">Sector</label><input class="f" id="mSector" placeholder="e.g. Bulk drug API"></div>
+          <div><label class="f" for="mSize">Workers on roll</label><input class="f" id="mSize" type="number" min="0" placeholder="0"></div>
+          <div><label class="f" for="mContract">Contract labour</label><input class="f" id="mContract" type="number" min="0" placeholder="0"></div>
+          <div><label class="f" for="mMigrant">Inter-State migrant workers</label><input class="f" id="mMigrant" type="number" min="0" placeholder="0"></div>
+          <div><label class="f" for="mDate">Date of inspection</label><input class="f" id="mDate" type="date"></div>
+          <div><label class="f" for="mLead">Lead inspector</label><input class="f" id="mLead" placeholder="Name"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3>Step 3 &mdash; Modules in scope</h3>
+      <div class="bd">
+        <div class="mods" id="mods"></div>
+        <p style="font-size:12px;color:var(--steel);margin:11px 0 0">
+          Core, cross-cutting, fire, hygiene and the state overlay are always in scope. Switch on only the sector modules that apply &mdash; anything switched off is excluded from the score.
+        </p>
+      </div>
+    </div>
+
+    <div id="sections"></div>
+    <div id="report"></div>
+  </div>
+</div>
+
+<div class="foot">
+  <b>Legal basis.</b> The Occupational Safety, Health and Working Conditions Code, 2020 (Act 37 of 2020) came into force on 21 November 2025 (S.O. 5321(E)), repealing the Factories Act 1948, Mines Act 1952, CLRA 1970, ISMW Act 1979, Dock Workers (SHW) Act 1986, BOCW Act 1996 and seven other enactments under S.143(1). Final Central Rules were notified on 8 May 2026. State rules under the OSH Code are at different stages across the six states; under S.143(3) the machinery of the repealed Acts and the existing State Factories Rules continues to operate so far as it is not contrary to the Code, until State OSH Rules replace it.<br><br>
+  <b>Verify before citing.</b> State rule status, fire NOC categories and validity periods change frequently. Confirm each state citation against the current gazette and the relevant DISH / State Fire Service circular before issuing a report to a client or a regulator. This instrument records professional judgement; it is not a legal opinion.<br><br>
+  <b>SAFELINK SOUTH</b> &middot; South India Alliance for Safety, Health &amp; Emergency Response &middot; Section 8 non-profit &middot; Chennai
+</div>
+
+<script>
+/* ==========================================================================
+   DATA MODEL
+   w = weight. 3 = life-safety critical or offence carrying imprisonment.
+                2 = significant. 1 = administrative.
+   ========================================================================== */
+
+const CORE = [
+{id:"REG", ix:"A", title:"Registration, licence and statutory notices", items:[
+ {r:"S.3(1)",  q:"Establishment registered electronically within 60 days of the Code applying to it", e:"Electronic certificate of registration; date of first employment against date of application", w:2},
+ {r:"S.3(8)",  q:"Where already registered under a repealed Central Act, registration details furnished to the registering officer (deemed registration)", e:"Prior factory licence / registration plus proof of submission", w:2},
+ {r:"S.3(4)",  q:"Change in ownership, management or particulars intimated within 30 days and certificate amended", e:"Change log, intimation acknowledgement, amended certificate", w:1},
+ {r:"S.5",     q:"Notice of commencement of operation sent electronically; cessation intimated", e:"Copy of notice with acknowledgement", w:1},
+ {r:"S.119",   q:"Common or single licence held (factory / beedi premises / contract labour) and conditions observed", e:"Licence, validity, conditions, declared ISMW numbers", w:2},
+ {r:"S.79(1)", q:"Previous permission for site, construction or extension; approved plans match the as-built plant", e:"Approved plans, permission letter, walk-down against layout", w:2}
+]},
+{id:"DUTY", ix:"B", title:"Duties of the employer", items:[
+ {r:"S.6(1)(a)", q:"Workplace free from hazards likely to cause injury or occupational disease", e:"HIRA / HAZOP / HAZID register, JSA, action closure evidence", w:3},
+ {r:"S.6(1)(b)", q:"Occupational safety and health standards under S.18 complied with", e:"Standards register, gap assessment, compliance calendar", w:2},
+ {r:"S.6(1)(c)", q:"Free annual health examination provided to the prescribed class of employees", e:"OH centre records, schedule, invoices showing no employee cost", w:2},
+ {r:"S.6(1)(d)", q:"Safe working environment provided and maintained so far as reasonably practicable", e:"Maintenance regime, statutory test certificates, plant condition", w:3},
+ {r:"S.6(1)(e)", q:"Hazardous and toxic waste, including e-waste, disposed of properly", e:"Authorisation, manifests, TSDF / authorised recycler records", w:2},
+ {r:"S.6(1)(f)", q:"Letter of appointment issued to every employee, including contract and migrant workers", e:"Sample letters across all categories", w:2},
+ {r:"S.6(1)(g)", q:"No charge levied on any employee for safety and health provision, including medical examination", e:"Payroll deductions, PPE issue policy, medical billing", w:3},
+ {r:"S.6(1)(h)", q:"Employer accepts responsibility for everyone on the work premises, with or without his knowledge", e:"Gate control, contractor and visitor induction, permit-to-work", w:3},
+ {r:"S.6(2)(a)", q:"Plant and systems of work safe and without risk to health", e:"Asset integrity records, safety-critical element register, defect backlog", w:3},
+ {r:"S.6(2)(b)", q:"Safe arrangements for use, handling, storage and transport of articles and substances", e:"Chemical inventory, SDS access, segregation, labelling, MHE control", w:3},
+ {r:"S.6(2)(c)", q:"Information, instruction, training and supervision provided to all employees", e:"Training needs matrix, competency records, supervision ratio", w:3},
+ {r:"S.6(2)(d)", q:"Places of work safe with safe access and egress", e:"Walkways, handrails, stairways, escape routes, housekeeping", w:3},
+ {r:"S.6(2)(e)", q:"Working environment monitored for safety and health", e:"Occupational hygiene monitoring, calibration, trend review", w:2},
+ {r:"S.8",       q:"Articles supplied are safe by design, tested, and supplied with adequate information; imports conform to Indian or higher standards", e:"Purchase specifications, type test certificates, O&M manuals", w:2},
+ {r:"S.9",       q:"Architect, project engineer and designer addressed worker safety at planning stage and in maintainability", e:"Design HSE review records, safety-in-design register", w:2}
+]},
+{id:"INC", ix:"C", title:"Accident, dangerous occurrence and disease reporting", items:[
+ {r:"S.10(1)", q:"Death or injury preventing work for 48 hours or more notified to the prescribed authority in time", e:"Accident register, notice copies with acknowledgement, timeline", w:3},
+ {r:"S.11",    q:"Dangerous occurrences notified whether or not anyone was injured", e:"Definition adopted, notification register, near-miss to DO screening", w:2},
+ {r:"S.12(1)", q:"Third Schedule notifiable disease contracted by a worker reported", e:"OH records, notification copies, Third Schedule awareness in OH centre", w:3},
+ {r:"S.12(2)", q:"Attending medical practitioner has a standing instruction to report a Third Schedule disease without delay", e:"Retainer terms with the practitioner, reporting protocol", w:2},
+ {r:"S.121",   q:"Cooperation with any Government inquiry into a serious accident or suspected epidemic occupational disease", e:"Past inquiry files, assessor reports, action plans", w:1},
+ {r:"S.103",   q:"Incident investigation identifies the duty breached, not only the immediate cause \u2014 note S.103 exposes the employer to imprisonment where a duty breach caused death or serious injury", e:"Investigation reports, root cause method, learning distribution", w:3}
+]},
+{id:"ORG", ix:"D", title:"Safety organisation and worker voice", items:[
+ {r:"S.22(1)", q:"Safety Committee constituted, with worker representatives not fewer than employer representatives", e:"Constitution order, membership, minutes, action tracking", w:2},
+ {r:"S.22(2)", q:"Safety officer appointed where threshold met \u2014 factory 500+, hazardous-process factory 250+, construction 250+, mine 100+", e:"Headcount basis, appointment order, qualification, reporting line", w:3},
+ {r:"S.18(2)(b)(v)", q:"Hazard evaluation carried out \u2014 safety audit, HAZOP, fault tree or event tree \u2014 and recommendations closed", e:"Study reports, revalidation cycle, closure register", w:2},
+ {r:"S.13",    q:"Employees understand their own duties, including the duty to report unsafe conditions", e:"Worker interviews, stop-work records", w:2},
+ {r:"S.14(1)", q:"Workers can obtain safety information and raise inadequate protection, with escalation to the Inspector-cum-Facilitator", e:"Communication channels, notice boards, worker interviews", w:2},
+ {r:"S.14(2)", q:"Imminent danger route works: worker to employer and simultaneously to the Inspector-cum-Facilitator; remedial action reported", e:"Procedure, past instances, report copies", w:3},
+ {r:"S.15",    q:"Nothing provided for health, safety or welfare has been interfered with, damaged or misused", e:"Guards, interlocks, alarms, extinguishers, eyewash; bypass register", w:3}
+]},
+{id:"COND", ix:"E", title:"Health, safety and working conditions", items:[
+ {r:"S.23(2)(i)",    q:"Cleanliness and hygiene maintained throughout", e:"Housekeeping standard, cleaning schedule, waste segregation", w:1},
+ {r:"S.23(2)(ii)",   q:"Ventilation, temperature and humidity adequate for the work", e:"Ventilation design, air changes, thermal comfort / heat stress readings", w:2},
+ {r:"S.23(2)(iii)",  q:"Environment free from dust, noxious gas, fumes and other impurities", e:"LEV systems and testing, personal and area monitoring results", w:3},
+ {r:"S.23(2)(v)",    q:"Potable drinking water available at adequate points", e:"Points per location, cooling, potability test reports", w:2},
+ {r:"S.23(2)(vi)",   q:"Overcrowding prevented; sufficient space per employee", e:"Floor area and volume per person in workrooms", w:1},
+ {r:"S.23(2)(vii)",  q:"Adequate lighting including emergency and task lighting", e:"Lux survey, emergency lighting test records", w:2},
+ {r:"S.23(2)(viii)", q:"Latrines and urinals sufficient and separate for male, female and transgender employees", e:"Count against headcount, signage, cleaning frequency, condition", w:2},
+ {r:"S.23(2)(ix)",   q:"Effective treatment of wastes and effluents", e:"ETP / STP operation, consent conditions, discharge monitoring", w:2}
+]},
+{id:"WEL", ix:"F", title:"Welfare facilities", items:[
+ {r:"S.24(1)(i)",   q:"Washing facilities separate for male and female employees", e:"Count, condition, water supply, privacy", w:1},
+ {r:"S.24(1)(ii)",  q:"Bathing places and locker rooms separate for male, female and transgender employees", e:"Provision especially for hazardous-substance handlers", w:2},
+ {r:"S.24(1)(iii)", q:"Place for keeping clothing not worn at work and for drying wet clothing", e:"Change room provision; contaminated and clean clothing kept apart", w:1},
+ {r:"S.24(1)(iv)",  q:"Sitting arrangements for employees obliged to work standing", e:"Workstation survey, ergonomics assessment", w:1},
+ {r:"S.24(1)(v)",   q:"Canteen where 100 or more workers including contract labour are ordinarily employed", e:"Headcount including contract labour, licence, hygiene, food handler medicals", w:2},
+ {r:"S.24(1)(vii)", q:"First-aid boxes adequate, complete, in date and accessible in all working hours", e:"Number and location, contents, expiry, trained first-aiders per shift", w:3},
+ {r:"S.24(2)(i)",   q:"Ambulance room where more than 500 workers are ordinarily employed", e:"Room, equipment, staffing, ambulance response time", w:2},
+ {r:"S.24(2)(iii)", q:"Separate shelters or rest rooms and a lunch room where more than 50 workers are ordinarily employed", e:"Provision, capacity, condition", w:1},
+ {r:"S.24(2)(iv)",  q:"Welfare officer appointed where 250 or more workers are ordinarily employed", e:"Appointment order, qualification, duties", w:1},
+ {r:"S.24(3)",      q:"Cr\u00e8che for children under six where more than 50 workers are ordinarily employed", e:"Facility or common cr\u00e8che agreement, location, staffing", w:2}
+]},
+{id:"HRS", ix:"G", title:"Hours of work, leave and wages", items:[
+ {r:"S.25(1)", q:"No worker required to work more than eight hours a day, within notified intervals and spread-over", e:"Rosters, biometric data, shift patterns", w:2},
+ {r:"S.26(1)", q:"No worker works more than six days in any one week", e:"Attendance analysis for consecutive working days", w:2},
+ {r:"S.26(3)", q:"Compensatory holidays granted within the month or the two following months where a weekly holiday was lost", e:"Compensatory-off register with dates", w:1},
+ {r:"S.27",    q:"Overtime paid at twice the rate, with the worker's consent, within prescribed limits", e:"OT register, wage sheets, written consent, daily vs weekly computation", w:2},
+ {r:"S.29",    q:"No overlapping shifts \u2014 not more than one relay on the same kind of work at the same time", e:"Shift charts, handover overlap, exemption order if relied on", w:1},
+ {r:"S.30",    q:"No worker in a factory or mine within twelve hours of working in another such establishment", e:"Declarations, cross-site attendance checks, contractor deployment", w:2},
+ {r:"S.31",    q:"Notice of periods of work displayed, sent to the Inspector-cum-Facilitator, changes intimated in advance", e:"Displayed notice, dispatch record, change history", w:1},
+ {r:"S.32",    q:"Annual leave with wages correctly computed \u2014 180 qualifying days, one day per twenty worked, 30-day carry forward, encashment on demand", e:"Leave register, entitlement recalculation for a worker sample", w:2},
+ {r:"S.32(1)(vi)", q:"Leave wages on exit paid within the statutory window \u2014 second working day on separation, two months on death or superannuation", e:"Full-and-final settlement records with dates", w:2}
+]},
+{id:"REC", ix:"H", title:"Registers, records and returns", items:[
+ {r:"S.33(a)", q:"Register of workers complete with hours, rest day, wages, leave, overtime, attendance, dangerous occurrences and adolescents", e:"Registers with all prescribed fields, currency, retention", w:2},
+ {r:"S.33(b)", q:"Notices displayed at the workplace in the prescribed form and in a language workers read", e:"Notice boards, language, legibility, location", w:2},
+ {r:"S.33(c)", q:"Wage slips issued to all workers including contract labour", e:"Sample wage slips across categories", w:1},
+ {r:"S.33(d)", q:"Returns filed to the Inspector-cum-Facilitator within the prescribed periods", e:"Filed returns with acknowledgements, filing calendar", w:1}
+]},
+{id:"WOM", ix:"I", title:"Employment of women and vulnerable groups", items:[
+ {r:"S.43", q:"Women employed before 6 a.m. or beyond 7 p.m. only with written consent and with the prescribed safety conditions in place", e:"Consent records, transport, lighting, security, deployment in groups, complaint mechanism", w:3},
+ {r:"S.44", q:"Where the State requires safeguards for women in dangerous operations, those safeguards are in place before deployment", e:"Risk assessment for the operation, safeguards, deployment records", w:2},
+ {r:"S.25(4)", q:"Adolescent working hours regulated under the Child and Adolescent Labour Act; no child labour on site or in the contractor chain", e:"Age verification under S.117(2), contractor audit, gate records", w:3},
+ {r:"\u2014", q:"Internal Committee constituted under the Sexual Harassment of Women at Workplace Act 2013 and functioning", e:"Constitution order, annual report, awareness among women workers", w:2}
+]},
+{id:"GOV", ix:"J", title:"Inspection support, contractor governance and accountability", items:[
+ {r:"S.40",    q:"Reasonable facilities afforded for inspection, survey, measurement and inquiry", e:"Access protocol, escort arrangement, past cooperation", w:1},
+ {r:"S.37",    q:"Where the third-party audit scheme applies, the empanelled expert's audit is done and the report submitted", e:"Audit report, empanelment status, action closure", w:1},
+ {r:"S.118",   q:"Where a duty is qualified by what is reasonably practicable, the employer can demonstrate the basis \u2014 the onus lies on him", e:"ALARP demonstration, risk-based justification", w:2},
+ {r:"S.110(1)", q:"Aware that the 30-day compliance opportunity does not apply in the case of an accident or a repeat violation within three years", e:"Past notices, compliance history, repeat-violation record", w:1},
+ {r:"S.109",   q:"Persons in charge and responsible for the conduct of business identified; due-diligence arrangements documented", e:"Delegation of authority, occupier nomination, board-level HSE governance", w:2},
+ {r:"S.120",   q:"Any award, agreement or contract giving the employee more favourable benefits continues to be honoured", e:"Settlements, standing orders, contracts compared with Code minima", w:1}
+]}
+];
+
+const CROSS = {id:"CROSS", ix:"K", title:"Cross-cutting central regime (applies in all six states)", items:[
+ {r:"MSIHC 1989", q:"Manufacture, Storage and Import of Hazardous Chemical Rules \u2014 site notification, safety report, on-site emergency plan, safety data sheets, and information to the district authority for off-site planning", e:"Threshold quantity screening against Schedules 2 and 3, MAH declaration, safety report currency", w:3},
+ {r:"MSIHC 1989", q:"Off-site emergency plan prepared by the district authority using operator-supplied data; community in the vicinity informed of the hazards and the alert signal", e:"District plan reference, community information campaign, siren and SMS alert test records", w:3},
+ {r:"CA(EPPR) 1996", q:"Chemical Accidents (Emergency Planning, Preparedness and Response) Rules \u2014 participation in the district and local crisis groups, and biannual mock drill with the community", e:"Crisis group minutes, mock drill reports and critique, community participation evidence", w:3},
+ {r:"EP Act 1986", q:"Environment Protection Act consents to establish and operate current; conditions complied with", e:"SPCB consents, condition-by-condition compliance, returns", w:2},
+ {r:"HOWM 2016", q:"Hazardous and Other Wastes (Management and Transboundary Movement) Rules \u2014 authorisation, storage limits, manifest system", e:"Authorisation, Form 10 manifests, storage duration and condition", w:2},
+ {r:"E-Waste 2022", q:"E-Waste (Management) Rules \u2014 channelisation to registered recyclers, records maintained", e:"Recycler registration, transfer records", w:1},
+ {r:"Explosives Rules 2008", q:"PESO licence for manufacture, possession, sale or transport of explosives; magazine distances and quantity limits observed", e:"PESO licence, licensed vs actual quantities, magazine survey, competent person", w:3},
+ {r:"SMPV(U) 2016", q:"Static and Mobile Pressure Vessels (Unfired) Rules \u2014 licence, statutory testing, filling and storage installation approval", e:"PESO licence, hydrotest and UT records, safety valve testing", w:3},
+ {r:"Gas Cylinders Rules 2016", q:"Cylinder storage licence, segregation, valve protection, and periodic testing", e:"Licence, storage layout, cylinder test dates", w:2},
+ {r:"Petroleum Rules 2002", q:"Petroleum storage licence and installation approval for Class A, B and C petroleum", e:"PESO licence, tank and dispensing installation approval, earthing records", w:2},
+ {r:"Electricity Act 2003 / CEA Regs", q:"Electrical installation safety \u2014 periodic testing, earthing, hazardous-area equipment certification, licensed electrical supervisor", e:"Electrical inspector approval, earth pit records, Ex certification, supervisor licence", w:3},
+ {r:"Boilers Act 1923", q:"Boiler registration and certificate current; boiler operation engineer or attendant certified", e:"Form VI certificate, operator competency certificate, safety valve settings", w:3},
+ {r:"CMVR / MV Rules", q:"Hazardous goods transport \u2014 TREM card, driver training certificate, emergency information panel, vehicle fitness", e:"TREM cards, driver certificates, vehicle documents", w:2},
+ {r:"NDMA Guidelines", q:"On-site emergency plan tested against the credible worst case, with mutual aid, assembly points and headcount discipline", e:"Plan currency, drill frequency, evacuation time, mutual aid agreements", w:3}
+]};
+
+const FIRE = {id:"FIRE", ix:"L", title:"Fire protection, detection and means of escape", items:[
+ {r:"State Fire Act", q:"Fire NOC or fire licence obtained from the State Fire Service and currently valid for the occupancy and hazard class", e:"NOC certificate, validity date, occupancy class, conditions endorsed on it", w:3},
+ {r:"NBC 2016 Pt 4", q:"Occupancy classification and hazard grading correct; fire load assessed for each block", e:"Occupancy classification note, fire load calculation, block-wise hazard grading", w:2},
+ {r:"NBC 2016 Pt 4", q:"Means of escape adequate \u2014 travel distance, exit width, number of exits, and no dead ends beyond the permitted limit", e:"Exit survey with measurements against NBC travel distance limits", w:3},
+ {r:"NBC 2016 Pt 4", q:"Exits unobstructed, outward-opening, panic hardware where required, and never locked during working hours", e:"Walk every escape route on every shift, including night shift", w:3},
+ {r:"NBC 2016 Pt 4", q:"Exit signage and emergency lighting on escape routes, tested and functional", e:"Signage placement and legibility, emergency light autonomy test", w:3},
+ {r:"NBC 2016 Pt 4", q:"Compartmentation and fire-rated separation intact; penetrations sealed; fire doors self-closing", e:"Fire door inspection, penetration seal survey, damper testing", w:2},
+ {r:"NBC 2016 Pt 4", q:"Static water storage, fire pump set (main, jockey and diesel standby), and pressure maintained at the remotest hydrant", e:"Tank capacity against NBC requirement, pump auto-start test, remote hydrant pressure test", w:3},
+ {r:"NBC 2016 Pt 4", q:"Hydrant, sprinkler and where required foam or gaseous suppression systems installed, commissioned and under maintenance", e:"System drawings, commissioning records, flow test, sprinkler head condition and clearance", w:3},
+ {r:"NBC 2016 Pt 4", q:"Fire detection and alarm system covers all risk areas; audible throughout; monitored and tested", e:"Detector layout, zone chart, weekly alarm test log, false alarm history", w:3},
+ {r:"IS 2190 / NBC", q:"Portable extinguishers of the correct type, correctly located, accessible, and within refill and hydrotest date", e:"Extinguisher register, type against hazard, pressure and seal check", w:2},
+ {r:"State Fire Act", q:"Fire fighting team or fire crew trained, rostered on every shift, and drilled", e:"Team roster, training records, drill frequency and critique", w:3},
+ {r:"State Fire Act", q:"Fire drill and evacuation carried out at the prescribed frequency, with evacuation time recorded and improved", e:"Drill reports, evacuation times, muster discipline, contractor and visitor inclusion", w:3},
+ {r:"NBC 2016 Pt 4", q:"Fire tender access road, hard standing and turning radius maintained clear around the plant", e:"Site walk of the access route, obstruction survey, gate width", w:2},
+ {r:"Hot Work", q:"Hot work permit system with gas testing, fire watch, and post-work surveillance", e:"Permit samples, gas test records, fire watch competency", w:3},
+ {r:"Flammables", q:"Flammable liquid storage segregated, bunded, earthed and bonded, with venting and flame arrestors", e:"Storage layout, bund capacity, earthing continuity test, arrestor inspection", w:3},
+ {r:"Insurance", q:"Fire insurance survey or risk engineering recommendations tracked to closure", e:"Insurer survey report, recommendation register", w:1}
+]};
+
+const IH = {id:"IH", ix:"M", title:"Industrial hygiene and occupational health", items:[
+ {r:"S.88 / S.18", q:"Qualitative exposure assessment completed \u2014 every similar exposure group mapped to its chemical, physical and biological agents", e:"SEG register, agent inventory, basis of assessment", w:3},
+ {r:"S.88",  q:"Personal exposure monitoring against the prescribed permissible limits, by an accredited laboratory, on a defined cycle", e:"Sampling strategy, NABL reports, comparison with PEL, exceedance actions", w:3},
+ {r:"S.23(2)(iii)", q:"Local exhaust ventilation designed, capture velocity verified, and tested periodically", e:"LEV design basis, face velocity readings, testing frequency", w:3},
+ {r:"S.6(2)(e)", q:"Noise survey completed; hearing conservation programme with audiometry where exposure exceeds the limit", e:"Noise map, dosimetry, audiometry records, HPD selection and fit", w:2},
+ {r:"S.6(2)(e)", q:"Heat stress assessed in hot processes with WBGT, work-rest cycles and hydration \u2014 a live risk in textile, foundry, glass and forging units", e:"WBGT readings by season and shift, work-rest regime, hydration provision", w:3},
+ {r:"S.12 / Sch III", q:"Occupational disease surveillance targeted at the Third Schedule diseases credible for this process \u2014 silicosis, asbestosis, byssinosis, noise induced hearing loss, chrome ulceration, benzene poisoning, occupational cancer", e:"Surveillance protocol matched to the agent inventory; radiology and function tests", w:3},
+ {r:"S.85(a)", q:"Health records of exposed workers accurate, up to date and accessible to the worker, and retained after he leaves the job", e:"Record content, access procedure, retention period", w:2},
+ {r:"S.85(c)", q:"Pre-placement, periodic (not exceeding twelve months) and exit medical examination for hazardous-substance jobs", e:"Medical records with dates against the exposure register", w:3},
+ {r:"S.6(2)(b)", q:"Respiratory protection programme \u2014 hazard-based selection, fit testing, cartridge change schedule, cleaning and storage", e:"RPE selection basis, fit test records, change-out calculation", w:3},
+ {r:"S.6(2)(b)", q:"Confined space entry controlled by permit, with atmospheric testing, ventilation, attendant and rescue arrangement", e:"Permit samples, gas test records, rescue plan and drill, entrant training", w:3},
+ {r:"S.23(2)(iii)", q:"Silica, asbestos, lead, chromium and solvent exposures specifically controlled where present", e:"Agent-specific control plan, substitution assessment, containment", w:3},
+ {r:"S.6(1)(g)", q:"Workers not charged for PPE, monitoring or medical examination, and PPE issued in correct sizes including for women workers", e:"Issue register, size range, fit for women workers, replacement cycle", w:2}
+]};
+
+const SECTORS = [
+{id:"HAZP", ix:"N", title:"Hazardous process factory (First Schedule)", items:[
+ {r:"S.2(za)", q:"Confirmed whether the industry appears in the First Schedule \u2014 this engages the 250-worker safety officer threshold and the whole of S.84 to S.89", e:"Process mapped to the First Schedule entry", w:2},
+ {r:"S.83", q:"Site appraisal committee recommendation obtained for initial location or expansion", e:"Application, recommendation, conditions imposed", w:2},
+ {r:"S.84(1)", q:"Dangers and health hazards disclosed to workers, the Inspector-cum-Facilitator, the local authority and the general public in the vicinity", e:"Disclosure documents, hazard communication material, public issue evidence", w:3},
+ {r:"S.84(2)", q:"Detailed health and safety policy laid down and intimated; changes intimated at the prescribed intervals", e:"Signed policy, intimation letters, revision history", w:2},
+ {r:"S.84(4)", q:"On-site emergency plan and disaster control measures approved by the Chief Inspector-cum-Facilitator and made known to workers and the neighbouring public", e:"Approved plan, mock drill critique, community awareness evidence, ERT roster", w:3},
+ {r:"S.84(5)", q:"Chief Inspector-cum-Facilitator informed within 30 days before commencing any hazardous process \u2014 failure makes the licence liable to cancellation", e:"Intimation with date against commissioning date", w:3},
+ {r:"S.84(7)", q:"Measures for handling, use, transport, storage and outside disposal of hazardous substances approved in advance and publicised", e:"Approved measures, SOPs, publicity evidence", w:2},
+ {r:"S.85(b)", q:"Competent persons with prescribed qualification and experience supervise the handling of hazardous substances", e:"Appointment, qualification, competency assessment", w:3},
+ {r:"S.89", q:"Workers' right to warn of imminent danger is understood and has been used, with remedial action reported", e:"Procedure, worker interviews, past instances", w:3},
+ {r:"S.87", q:"Any emergency standards laid down for the process are enforced as if in the rules", e:"Applicable standards, implementation evidence", w:2}
+]},
+{id:"CL", ix:"O", title:"Contract labour", items:[
+ {r:"S.45", q:"Applicability confirmed \u2014 50 or more contract labour on any day in the preceding twelve months", e:"Twelve-month headcount trend, nature and duration of work", w:2},
+ {r:"S.47", q:"Every contractor holds a valid licence and does not exceed the licensed number", e:"Licence copies, licensed vs deployed by contractor, security deposit", w:3},
+ {r:"S.54", q:"No contract labour engaged through an unlicensed contractor \u2014 deemed a contravention", e:"Licence verification before mobilisation, pre-qualification process", w:3},
+ {r:"S.49", q:"No fee or commission charged from contract labour, directly or indirectly", e:"Worker interviews, recruitment agent arrangement, wage deductions", w:3},
+ {r:"S.53", q:"Principal employer provides the S.23 and S.24 welfare facilities to contract labour", e:"Access to canteen, water, latrines, rest rooms and first aid for contract workforce", w:3},
+ {r:"S.55", q:"Contractor pays wages within the prescribed period by bank or electronic transfer and informs the principal employer electronically", e:"Bank statements, contractor intimation to principal employer", w:2},
+ {r:"S.55(3)", q:"Principal employer verifies payment and meets any shortfall, recovering it from the contractor", e:"Verification mechanism, default and recovery instances", w:2},
+ {r:"S.57", q:"No contract labour in core activities except on one of the three permitted grounds, with the justification documented", e:"Core activity definition, justification, test against the S.2(p) non-core list", w:3},
+ {r:"S.56", q:"Experience certificate issued on demand in the prescribed form", e:"Sample certificates, request handling", w:1},
+ {r:"S.6(2)(c)", q:"Contract workers receive the same induction, training, PPE and emergency briefing as direct employees \u2014 the single commonest fatality factor in South Indian industry", e:"Compare training and PPE records of contract against direct workers", w:3}
+]},
+{id:"ISMW", ix:"P", title:"Inter-State migrant workers", items:[
+ {r:"S.59", q:"Applicability confirmed \u2014 ten or more inter-State migrant workers on any day in the preceding twelve months", e:"ISMW census, recruitment route, wage levels against the S.2(zf) ceiling", w:2},
+ {r:"S.60(i)", q:"Working conditions suited to a worker employed outside his own State, including language of instruction and signage", e:"Accommodation, signage language, food, grievance access", w:3},
+ {r:"S.60(ii)", q:"Fatal accident or serious injury reported to the authorities of both States and to the next of kin", e:"Reporting procedure, next-of-kin records captured at induction", w:3},
+ {r:"S.60(iii)", q:"All establishment benefits extended, including ESI or EPF and the S.6(1)(c) medical check-up", e:"Enrolment records, benefit parity comparison", w:2},
+ {r:"S.61", q:"Annual lump-sum to-and-fro journey allowance to the native place paid", e:"Payment records, policy, eligibility computation", w:2},
+ {r:"S.21(2)", q:"Workers helped to register on the inter-State migrant worker portal; establishment record maintained", e:"Registration assistance records, database extract", w:1},
+ {r:"S.62", q:"PDS portability option and construction cess benefit portability facilitated", e:"Awareness sessions, assistance records", w:1},
+ {r:"S.65", q:"No recovery attempted against unsettled debt of a migrant worker after his employment ends \u2014 it is extinguished", e:"Full-and-final settlements, advance recovery practice", w:2},
+ {r:"S.6(2)(c)", q:"Safety training and emergency instructions delivered in a language the migrant worker actually understands, not only the state language", e:"Training material languages, comprehension check, interpreter arrangement", w:3}
+]},
+{id:"BOCW", ix:"Q", title:"Building and other construction work", items:[
+ {r:"S.78", q:"No person known to be deaf, to have defective vision or a tendency to giddiness engaged in accident-risk operations", e:"Pre-employment audiometry, vision and vertigo screening; work-at-height fitness", w:3},
+ {r:"Sch II 52", q:"Safe access and sufficient scaffolding at every stage; scaffolds erected, inspected and tagged by a competent person", e:"Scaffold tags, inspection register, competent person qualification", w:3},
+ {r:"Sch II 56", q:"Hoists, lifting appliances and lifting gear tested, examined, heat-treated where required, and load-charted", e:"Third-party test certificates, colour coding, operator competency", w:3},
+ {r:"Sch II 66", q:"Safety nets, safety sheets and full-body harnesses provided and actually used at height, with anchor points", e:"Fall protection plan, anchor certification, observation at height", w:3},
+ {r:"Sch II 65", q:"Protection from live electric wires, temporary installations and overhead lines; ELCB on every distribution board", e:"Temporary electrical inspection, ELCB test, overhead line clearance survey", w:3},
+ {r:"Sch II 68", q:"Excavation, shoring, pile driving, concrete work and demolition controlled under a competent person", e:"Excavation permits, shoring design, soil assessment, demolition method statement", w:3},
+ {r:"S.24(2)(v)", q:"Temporary living accommodation free of charge at or near the site, with the principal employer bearing the cost where work is through a contractor", e:"Labour camp condition and location, cost allocation in the contract", w:2},
+ {r:"S.22(2)(c)", q:"Safety officer appointed where 250 or more workers are ordinarily employed", e:"Headcount, appointment, qualification", w:2},
+ {r:"Sch II 69", q:"Written safety policy framed by the employer and by each contractor for the works", e:"Policy documents, contractor safety plans", w:1}
+]},
+{id:"MINE", ix:"R", title:"Mines and quarries", items:[
+ {r:"S.67(1)", q:"Sole manager appointed with the prescribed qualifications", e:"Appointment order, certificate of competency", w:3},
+ {r:"S.67(3)", q:"Owner or agent gives instructions only through the manager, confirmed in writing", e:"Instruction records, organisation chart", w:2},
+ {r:"S.7", q:"Owner and agent jointly and severally making the financial and other provisions for compliance", e:"Safety budget allocation, due-diligence records", w:2},
+ {r:"S.70", q:"No person below eighteen; trainees not below sixteen only under supervision and with prior approval", e:"Age verification under S.117(2), trainee approvals", w:3},
+ {r:"S.72", q:"Rescue and recovery services and vocational training established and maintained", e:"Rescue station, trained teams, drills, equipment condition", w:3},
+ {r:"S.22(2)(d)", q:"Safety officer appointed where 100 or more workers are ordinarily employed", e:"Headcount, appointment, qualification", w:2},
+ {r:"S.25(1)", q:"Below-ground hours within the notified limit; no person below ground outside the register periods", e:"Tally system, shift charts, S.33(a) register entries", w:3},
+ {r:"S.12 / Sch III", q:"Silicosis and coal miners' pneumoconiosis surveillance in place, with chest radiography and a worker register", e:"Screening programme, radiology, notification of detected cases", w:3},
+ {r:"S.139", q:"Bye-laws framed, approved, and displayed in English and the regional language near the mine", e:"Approved bye-laws, display condition and location", w:1},
+ {r:"DGMS", q:"DGMS circulars applicable to the mine identified and complied with; benches, slope stability and haul roads inspected", e:"Circular compliance register, bench geometry survey, slope monitoring", w:3}
+]},
+{id:"PLANT", ix:"S", title:"Plantation", items:[
+ {r:"S.92(1)(a)", q:"Housing with drinking water, kitchen and toilet for every worker and family", e:"Housing inventory and condition, water quality, sanitation", w:2},
+ {r:"S.92(1)(b)", q:"Cr\u00e8che where fifty or more workers including contractor's workers are employed", e:"Headcount, facility or common arrangement, staffing", w:2},
+ {r:"S.92(1)(c)", q:"Educational facilities where children aged six to twelve exceed twenty-five", e:"Child census, school arrangement", w:1},
+ {r:"S.93(1)", q:"Safe use, handling, storage and transport of insecticides, pesticides, chemicals and toxic substances", e:"Storage segregation, supervisor qualification, transport", w:3},
+ {r:"S.93(4)", q:"Workers who handle, mix, blend or apply such substances trained on hazards and spillage emergencies", e:"Training records, content, refresher frequency, spill drill", w:3},
+ {r:"S.93(5)", q:"Periodic medical examination and accessible health records for exposed workers", e:"Medical records, cholinesterase or equivalent monitoring", w:3},
+ {r:"S.93(8)", q:"List of permissible breathing-zone concentrations displayed and precautionary notices exhibited", e:"Displayed list and notices in the regional language", w:1}
+]},
+{id:"MTW", ix:"T", title:"Motor transport and hazardous goods movement", items:[
+ {r:"S.25(1)", q:"Hours of work include running time, subsidiary work and short attendance periods", e:"Duty logs, running-time definition applied", w:2},
+ {r:"S.26(1)", q:"Not more than ten consecutive days without a whole-day holiday", e:"Roster analysis", w:2},
+ {r:"S.24(2)(ii)", q:"Medical facilities at operating centres and halting stations; protection from rain and cold issued", e:"Facility inspection, issue records", w:1},
+ {r:"CMVR", q:"Journey risk management for hazardous goods \u2014 route survey, night driving restriction, fatigue control, in-vehicle monitoring", e:"JRA records, route plan, IVMS data, driver hours", w:3}
+]}
+];
+
+/* ---------------- STATE OVERLAYS ---------------- */
+const STATES = {
+TN:{name:"Tamil Nadu", full:"Tamil Nadu", lang:"Tamil", dish:"DISH Tamil Nadu \u2014 Directorate of Industrial Safety and Health",
+ stack:[
+  {k:"Primary", t:"OSH Code, 2020 (Act 37 of 2020)", n:"In force from 21 Nov 2025. Central Rules notified 8 May 2026."},
+  {k:"State rules", t:"Tamil Nadu OSH Code Rules", n:"Draft stage. Until notified, S.143(3) keeps the Tamil Nadu Factories Rules 1950 machinery alive so far as not contrary to the Code. Verify current status with DISH TN."},
+  {k:"Legacy machinery", t:"Tamil Nadu Factories Rules, 1950", n:"Forms, registers, licence procedure, welfare scales and dangerous-operation schedules continue in transition."},
+  {k:"Fire", t:"Tamil Nadu Fire and Rescue Services Act, 1985", n:"NOC and fire licence from TNFRS. Portal: nocs.tnfrs.tn.gov.in. Multi-storeyed buildings 18.3 m and above have a separate NOC route."},
+  {k:"Fireworks", t:"Explosives Act 1884 + Explosives Rules 2008 (PESO)", n:"Governs Sivakasi and Virudhunagar fireworks manufacture \u2014 licensed shed limits, quantity per shed, inter-shed distance."},
+  {k:"Environment", t:"TNPCB consents under Water and Air Acts", n:"Critical in Ennore-Manali, Cuddalore SIPCOT, Ranipet and Vellore tanning belt."},
+  {k:"Language", t:"Tamil", n:"Safety signage, MSDS summaries, permits and emergency instructions must be comprehensible to the Tamil-speaking workforce."}
+ ],
+ clusters:"Sivakasi fireworks; Ranipet and Ambur tanneries; Ennore-Manali petrochemicals; Cuddalore SIPCOT; Coimbatore and Tirupur textiles; Neyveli lignite; blue metal quarries.",
+ items:[
+  {r:"TN \u00b7 Explosives Rules 2008", q:"Fireworks and match units \u2014 licensed shed limits, maximum quantity per shed, inter-shed safety distance and non-sparking floors observed; no unlicensed job-work in dwellings", e:"PESO licence, shed layout survey, quantity reconciliation, sub-contracting chain", w:3},
+  {r:"TN \u00b7 S.82 dangerous ops", q:"Chromium exposure in tanning controlled \u2014 closed-loop or contained handling, hexavalent chromium monitoring, and screening for chrome ulceration and nasal septum perforation", e:"Cr(VI) air and biological monitoring, medical records, containment", w:3},
+  {r:"TN \u00b7 S.23(2)(ii)", q:"Heat stress in spinning, weaving and dyeing controlled \u2014 WBGT measured, humidification plant not used to mask heat, work-rest cycles and hydration for women workers", e:"WBGT by shift and season, humidification records, worker interviews", w:3},
+  {r:"TN \u00b7 MSIHC + TNFRS", q:"MAH installations in the Ennore-Manali and Cuddalore corridors: community siren, SMS cascade and ambulance tie-up tested \u2014 the specific failure at Cuddalore SIPCOT in September 2025", e:"Siren audibility survey in the neighbouring village, SMS test log, ambulance MoU", w:3},
+  {r:"TN \u00b7 S.6(2)(c)", q:"All safety instruction, permits, MSDS summaries and emergency notices available in Tamil for the contract and migrant workforce", e:"Sample documents, comprehension check with a worker", w:3},
+  {r:"TN \u00b7 TNFRS 1985", q:"Fire NOC held for the correct occupancy; conditions endorsed on the NOC verified on site, not just on paper", e:"NOC conditions listed and each one walked down", w:3},
+  {r:"TN \u00b7 Hostel workers", q:"Where women workers are housed in factory hostels, accommodation, movement, grievance access and night-shift consent verified independently of management", e:"Hostel inspection, private worker interviews, consent records", w:3},
+  {r:"TN \u00b7 Quarrying", q:"Blue metal and granite quarries \u2014 bench height and width, blasting controls, silica dust suppression and DGMS or state mining department compliance", e:"Bench survey, blasting records, dust monitoring, statutory approvals", w:3}
+ ]},
+
+TS:{name:"Telangana", full:"Telangana", lang:"Telugu", dish:"DISH Telangana \u2014 Directorate of Factories",
+ stack:[
+  {k:"Primary", t:"OSH Code, 2020 (Act 37 of 2020)", n:"In force from 21 Nov 2025. Central Rules notified 8 May 2026."},
+  {k:"State rules", t:"Telangana OSH Code Rules", n:"Verify current status with the Telangana Labour Department. Until notified, S.143(3) preserves existing machinery."},
+  {k:"Legacy machinery", t:"Telangana Factories Rules (adapted AP Factories Rules, 1950)", n:"Forms, registers, licensing and welfare scales continue in transition."},
+  {k:"Fire", t:"Telangana Fire Service Act, 1999", n:"Adapted from the AP Fire Service Act 1999. NOC from the Director General on satisfaction that NBC fire prevention and safety measures are provided. TS-iPASS integrated."},
+  {k:"Chemical", t:"MSIHC Rules 1989 + CA(EPPR) Rules 1996", n:"Central to Pharma City, Patancheru, Bollaram and Jeedimetla \u2014 reactive chemistry, solvent inventories and vapour release."},
+  {k:"Environment", t:"TSPCB consents; Common Effluent Treatment Plant membership", n:"Patancheru-Bollaram cluster carries legacy groundwater liability."},
+  {k:"Language", t:"Telugu", n:"Plus Hindi and Odia for the migrant construction workforce in the Hyderabad corridor."}
+ ],
+ clusters:"Hyderabad Pharma City and Pharma Valley; Patancheru-Bollaram-Jeedimetla chemical clusters; Hyderabad construction corridor; Srisailam and irrigation tunnel works.",
+ items:[
+  {r:"TS \u00b7 S.6(2)(b)", q:"Reactive chemical hazards assessed for every bulk drug and API step \u2014 reaction calorimetry, thermal stability data, runaway scenario and relief sizing", e:"DSC/ARC data, reaction hazard assessment, relief system design basis", w:3},
+  {r:"TS \u00b7 Flammables", q:"Solvent handling controlled \u2014 inventory minimised, nitrogen inerting, earthing and bonding on every transfer, and static control during charging", e:"Solvent inventory, inerting system, earth continuity test, charging SOP", w:3},
+  {r:"TS \u00b7 MSIHC 1989", q:"Toxic vapour release scenario modelled with an isopleth to the site boundary; neighbouring community informed and the alert route tested", e:"Consequence model, off-site plan input to the district authority, community drill", w:3},
+  {r:"TS \u00b7 Fire Service Act 1999", q:"Fire NOC from the Director General of Telangana Fire Services current, with NBC Part 4 measures physically verified for the solvent hazard class", e:"NOC, foam system, sprinkler density for the occupancy, hydrant pressure test", w:3},
+  {r:"TS \u00b7 Effluent", q:"CETP membership current and effluent within the agreed characteristics; no bypass or tanker diversion", e:"CETP agreement, discharge analysis, flow meter and tanker records", w:2},
+  {r:"TS \u00b7 BOCW", q:"Hyderabad construction \u2014 fall protection, edge protection, lift shaft covers and hoist certification on every active site", e:"Site walk at height, hoist certificates, harness anchor points", w:3},
+  {r:"TS \u00b7 Tunnel / underground", q:"Tunnel and underground works \u2014 inundation risk assessment, secondary egress, breathing air, communication and rescue arrangement, after the Srisailam tunnel deaths of October 2024", e:"Geotechnical and hydrological assessment, egress plan, rescue drill", w:3},
+  {r:"TS \u00b7 S.6(2)(c)", q:"Safety instruction available in Telugu, and in Hindi or Odia where the migrant workforce requires it", e:"Material languages, comprehension check", w:3}
+ ]},
+
+AP:{name:"Andhra", full:"Andhra Pradesh", lang:"Telugu", dish:"DISH Andhra Pradesh \u2014 Directorate of Factories",
+ stack:[
+  {k:"Primary", t:"OSH Code, 2020 (Act 37 of 2020)", n:"In force from 21 Nov 2025. Central Rules notified 8 May 2026."},
+  {k:"State rules", t:"Andhra Pradesh OSH Code Rules", n:"Verify current status with the AP Labour Department. Until notified, S.143(3) preserves existing machinery."},
+  {k:"Legacy machinery", t:"Andhra Pradesh Factories Rules, 1950", n:"Forms, registers, licensing, welfare scales and dangerous-operation schedules continue in transition."},
+  {k:"Fire", t:"Andhra Pradesh Fire Service Act, 1999", n:"S.13(2): the Director General issues the NOC on being satisfied that fire prevention and safety measures stipulated in the National Building Code, as amended, are provided. AP Single Desk integrated."},
+  {k:"Chemical", t:"MSIHC Rules 1989 + CA(EPPR) Rules 1996", n:"The regime whose failure produced the LG Polymers styrene release of 11 May 2020 \u2014 absent on-site plan, non-functional safety systems, no community alert."},
+  {k:"Ports", t:"Dock work provisions of the OSH Code (Chapter XI) + port authority rules", n:"Visakhapatnam, Gangavaram and Krishnapatnam \u2014 bulk chemical and LNG handling."},
+  {k:"Language", t:"Telugu", n:"Community hazard communication in Telugu is the specific gap identified after Vizag."}
+ ],
+ clusters:"Visakhapatnam petrochemical and port belt; APSEZ industrial zones; Krishnapatnam and Gangavaram ports; Kadapa, Kurnool and Nellore mining districts.",
+ items:[
+  {r:"AP \u00b7 MSIHC 1989", q:"Every stored monomer or reactive material has a documented stability and inhibitor regime, with temperature monitoring and an independent high-temperature alarm \u2014 the direct LG Polymers failure mode", e:"Inhibitor dosing records, tank temperature trend and alarm test, stability study", w:3},
+  {r:"AP \u00b7 S.84(4)", q:"On-site emergency plan tested with a full-scale drill including night shift and skeleton manning, not a tabletop", e:"Drill report, timing, participation, critique and closure", w:3},
+  {r:"AP \u00b7 CA(EPPR) 1996", q:"Community alert works \u2014 siren audibility measured at the furthest dwelling, evacuation route signed, and residents know what the signal means", e:"Audibility survey, resident interviews, signage, joint drill record", w:3},
+  {r:"AP \u00b7 Fire Service Act 1999 s.13(2)", q:"Fire NOC from the Director General current, based on NBC-stipulated measures actually installed and functional", e:"NOC, NBC measure-by-measure verification, system test records", w:3},
+  {r:"AP \u00b7 Dock work", q:"Port and jetty operations \u2014 ship-shore link, emergency release coupling, bunkering and cargo transfer procedures, and dock worker safety provisions", e:"Transfer procedure, ESD test, dock worker training and PPE", w:3},
+  {r:"AP \u00b7 S.12 / Sch III", q:"Silicosis surveillance for limestone and baryte mining and processing in Kadapa, Kurnool and Nellore, with a worker register and radiology", e:"Screening programme, dust monitoring, notification of detected cases", w:3},
+  {r:"AP \u00b7 S.6(2)(c)", q:"Contract workers are not used as first responders without SCBA, training and competency \u2014 the documented failure at LG Polymers", e:"ERT composition, SCBA training and fit test, drill participation", w:3},
+  {r:"AP \u00b7 S.6(2)(c)", q:"Safety instruction, permits and emergency notices in Telugu, with hazard communication extended to the neighbouring community", e:"Material languages, community information programme", w:3}
+ ]},
+
+KA:{name:"Karnataka", full:"Karnataka", lang:"Kannada", dish:"DISH Karnataka \u2014 Directorate of Factories, Boilers, Industrial Safety and Health",
+ stack:[
+  {k:"Primary", t:"OSH Code, 2020 (Act 37 of 2020)", n:"In force from 21 Nov 2025. Central Rules notified 8 May 2026."},
+  {k:"State rules", t:"Karnataka OSH Code Rules", n:"Draft Karnataka OSH Code Rules published January 2026; final state rules pending at last check. In the interim the Central OSH Rules give the operative framework. Verify current status."},
+  {k:"Legacy machinery", t:"Karnataka Factories Rules, 1969", n:"Forms, registers, licensing, welfare scales and dangerous-operation schedules continue in transition."},
+  {k:"Fire", t:"Karnataka Fire Force Act, 1964", n:"NOC from Karnataka State Fire and Emergency Services. Portal: ksfes.in, Sakala service timelines apply."},
+  {k:"Mining", t:"Mines Act provisions of the OSH Code + DGMS circulars + MMDR framework", n:"Bellary-Hosapete iron ore belt \u2014 slope stability, haul roads, dust."},
+  {k:"Night work", t:"Karnataka relaxation of night-shift rules for IT/ITeS and certain manufacturing", n:"Verify the current notification and its conditions before relying on it for women's night work under S.43."},
+  {k:"Language", t:"Kannada", n:"Plus Hindi, Odia and Bengali for the migrant workforce on Bengaluru construction sites."}
+ ],
+ clusters:"Bellary-Hosapete iron ore belt; Bhadravathi and Toranagallu steel; Mysuru and Mandya sugar and chemicals; Bengaluru construction and manufacturing; aerospace and defence at HAL, BEL, ISRO and DRDO.",
+ items:[
+  {r:"KA \u00b7 DGMS / S.6(2)(a)", q:"Bellary belt mining \u2014 bench geometry, slope stability monitoring, haul road design and dump stability formally assessed and inspected", e:"Slope stability study, bench survey, haul road standard, dump inspection", w:3},
+  {r:"KA \u00b7 S.12 / Sch III", q:"Silicosis surveillance for iron ore and stone dust exposure, with respirable dust monitoring and chest radiography", e:"Dust monitoring, screening programme, notification of cases", w:3},
+  {r:"KA \u00b7 S.6(2)(a)", q:"Steel plant hot metal risk \u2014 ladle integrity, wet-charge prevention, runner and pit dryness, and molten metal splash protection", e:"Ladle inspection, moisture control procedure, PPE for hot metal work", w:3},
+  {r:"KA \u00b7 Boilers Act", q:"Sugar mill and captive power boilers \u2014 registration current, safety valve settings verified, bagasse fire and dust explosion risk controlled", e:"Form VI certificate, safety valve test, bagasse yard controls", w:3},
+  {r:"KA \u00b7 Fire Force Act 1964", q:"Fire NOC from KSFES current for the occupancy; verified against the installed system, not only the approved drawing", e:"NOC, system-by-system walk-down, pump and hydrant test", w:3},
+  {r:"KA \u00b7 BOCW", q:"Bengaluru construction \u2014 fall protection, scaffold tagging, lift shaft protection and tower crane certification on every active site", e:"Site walk, scaffold tags, crane test certificate, operator licence", w:3},
+  {r:"KA \u00b7 S.43", q:"Women on night shift under any state relaxation \u2014 consent, transport door-to-door, escort, lighting and Internal Committee access all verified against the notification's conditions", e:"Notification conditions listed and each verified; consent records; transport log", w:3},
+  {r:"KA \u00b7 Aerospace / defence", q:"Specialised hazards \u2014 composites, hypergolic propellants, high-pressure and cryogenic systems \u2014 have a documented hazard assessment and competent supervision", e:"Hazard assessment, competency records, emergency arrangement", w:3}
+ ]},
+
+OD:{name:"Odisha", full:"Odisha", lang:"Odia", dish:"DISH Odisha \u2014 Directorate of Factories and Boilers",
+ stack:[
+  {k:"Primary", t:"OSH Code, 2020 (Act 37 of 2020)", n:"In force from 21 Nov 2025. Central Rules notified 8 May 2026."},
+  {k:"State rules", t:"Odisha OSH Code Rules", n:"Verify current status with the Odisha Labour Department. Until notified, S.143(3) preserves existing machinery."},
+  {k:"Legacy machinery", t:"Odisha Factories Rules, 1950", n:"Forms, registers, licensing and welfare scales continue in transition."},
+  {k:"Fire", t:"Odisha Fire Service Act, 1993", n:"Odisha Fire Service, under the Home Department, governs fire prevention measures and fire safety norms and issues the NOC."},
+  {k:"Mining", t:"Mines Act provisions of the OSH Code + DGMS Eastern Zone circulars", n:"Keonjhar, Sundargarh, Jharsuguda and Angul \u2014 iron ore, coal, bauxite and chromite."},
+  {k:"Occupational disease", t:"Silicosis notified as a notifiable disease in Odisha (2023)", n:"Notification duty under S.12 read with the Third Schedule. Screening infrastructure in the mining districts is the known gap."},
+  {k:"Natural hazard", t:"Cyclone Zone IV / V \u2014 OSDMA framework", n:"Coastal chemical, power and port infrastructure must plan for cyclone, storm surge and prolonged loss of power and access."}
+ ],
+ clusters:"Keonjhar and Sundargarh mining belt; Jharsuguda and Angul aluminium and power; Rourkela steel; Talcher coalfields; Lanjigarh alumina; Paradip port and petrochemicals.",
+ items:[
+  {r:"OD \u00b7 S.12 / Sch III", q:"Silicosis screening programme for every dust-exposed worker including contract labour, with a maintained register, radiology and notification of each detected case", e:"Exposed worker register, screening cycle, ILO-classified radiographs, notification copies", w:3},
+  {r:"OD \u00b7 DGMS EZ", q:"Underground coal mine controls \u2014 gas monitoring, ventilation survey, strata and roof support, and spontaneous heating management", e:"Gas monitoring records, ventilation survey, support rules, sealing history", w:3},
+  {r:"OD \u00b7 S.6(2)(a)", q:"Alumina and aluminium \u2014 red mud pond stability, caustic handling and burn response, and bath and molten metal handling controls", e:"Pond stability assessment, caustic emergency shower coverage, molten metal SOPs", w:3},
+  {r:"OD \u00b7 S.6(2)(a)", q:"Integrated steel \u2014 gas line integrity and CO monitoring, hot metal ladle and crane inspection, and gas-safe working procedure", e:"CO detector coverage and calibration, crane and ladle inspection, gas permit system", w:3},
+  {r:"OD \u00b7 Cyclone", q:"Cyclone and storm surge preparedness \u2014 plant shutdown and securing procedure, tank and stack anchorage, standby power, and re-start integrity assurance", e:"Cyclone procedure, anchorage design check, drill record, restart checklist", w:3},
+  {r:"OD \u00b7 Fire Service Act 1993", q:"Fire NOC from Odisha Fire Service current; coal, bagasse and conveyor fire risk specifically addressed", e:"NOC, conveyor fire detection, coal stockpile management", w:3},
+  {r:"OD \u00b7 S.60", q:"Migrant workers moving into and out of Odisha \u2014 both-State reporting on a fatal accident, next-of-kin records, and Odia or home-language instruction", e:"Next-of-kin register, reporting procedure, material languages", w:3},
+  {r:"OD \u00b7 Contractor", q:"Contractor workforce in mines, refineries and steel plants receives the same medical surveillance and training as company employees", e:"Compare contractor and company medical and training records", w:3}
+ ]},
+
+KL:{name:"Kerala", full:"Kerala", lang:"Malayalam", dish:"DISH Kerala \u2014 Directorate of Factories and Boilers",
+ stack:[
+  {k:"Primary", t:"OSH Code, 2020 (Act 37 of 2020)", n:"In force from 21 Nov 2025. Central Rules notified 8 May 2026."},
+  {k:"State rules", t:"Kerala rules under the Labour Codes", n:"Kerala is reported among the states that have notified rules under the Labour Codes. Confirm the OSH Code rules specifically, and their commencement date, before relying on them."},
+  {k:"Legacy machinery", t:"Kerala Factories Rules, 1957", n:"Forms, registers, licensing and welfare scales continue so far as not contrary to the Code."},
+  {k:"Fire", t:"Kerala Fire Force Act, 1962", n:"NOC from Kerala Fire and Rescue Services. Portal: noc.fire.kerala.gov.in. Under SBRAP 2024 the NOC runs five years for non-hazardous occupancies and two years for hazardous industries and storage \u2014 confirm the category applied to this unit."},
+  {k:"Chemical", t:"MSIHC Rules 1989 + CA(EPPR) Rules 1996", n:"Eloor-Udyogamandal: 247 units on a 3 km stretch of the Periyar \u2014 pesticides, fertilisers, petrochemicals, rare earths and chlor-alkali."},
+  {k:"Migrant labour", t:"Kerala schemes for inter-State migrant workers", n:"Registration, accommodation standards and health insurance for guest workers run alongside the OSH Code Part II duties. Verify the current scheme name and terms."},
+  {k:"Language", t:"Malayalam", n:"Plus Hindi, Bengali, Odia and Assamese \u2014 Kerala's construction workforce is largely inter-State."}
+ ],
+ clusters:"Eloor-Udyogamandal chemical belt on the Periyar; Kochi refinery and port; Cochin Shipyard; Kollam and Ernakulam cashew processing; Kochi and Thiruvananthapuram construction; Brahmapuram-type waste sites.",
+ items:[
+  {r:"KL \u00b7 MSIHC 1989", q:"Eloor-Udyogamandal type cluster \u2014 cumulative and domino risk between neighbouring units assessed jointly, not unit by unit", e:"Domino assessment, mutual aid agreement, joint drill with adjacent units", w:3},
+  {r:"KL \u00b7 Chlor-alkali", q:"Chlorine and ammonia \u2014 tonner and storage controls, emergency kit A/B/C available with a trained team, and scrubber or absorption system tested", e:"Kit inventory and drill, scrubber test, leak detection coverage", w:3},
+  {r:"KL \u00b7 Fire Force Act 1962", q:"Fire NOC from Kerala Fire and Rescue Services current and correctly categorised \u2014 hazardous industries and storage carry a two-year validity under the SBRAP 2024 order", e:"NOC certificate, category applied, renewal date, conditions verified", w:3},
+  {r:"KL \u00b7 Waste fire", q:"Waste, biomass and refuse storage \u2014 stockpile height and turning, temperature monitoring, firebreaks and water access, after the Brahmapuram fire of March 2023", e:"Stockpile management plan, thermal survey, firebreak layout, water availability", w:3},
+  {r:"KL \u00b7 Shipyard", q:"Ship repair and confined space \u2014 gas-free certification by a competent person, asbestos survey before hot work, and blasting and coating exposure control", e:"Gas-free certificates, asbestos register and survey, blasting enclosure and RPE", w:3},
+  {r:"KL \u00b7 Cashew / CNSL", q:"Cashew processing \u2014 CNSL contact dermatitis and burn prevention, glove and barrier protection, and steam and roasting scald controls for women workers", e:"Skin health surveillance, PPE suitability, worker interviews", w:3},
+  {r:"KL \u00b7 Migrant workers", q:"Guest worker registration, accommodation standards, health insurance and safety instruction in Hindi, Bengali, Odia or Assamese as required", e:"Registration records, accommodation inspection, insurance cards, material languages", w:3},
+  {r:"KL \u00b7 Periyar discharge", q:"Effluent and stormwater discharge to the Periyar monitored, with no bypass; downstream community informed of any upset condition", e:"Discharge monitoring, bypass valve seals, community notification protocol", w:2}
+ ]}
+};
+
+/* ==========================================================================
+   STATE OF THE APP
+   ========================================================================== */
+const S = {state:null, on:{HAZP:false,CL:false,ISMW:false,BOCW:false,MINE:false,PLANT:false,MTW:false}, r:{}, meta:{}};
+const VAL = {C:1, OBS:0.5, NC:0, NA:null, NV:null};
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---- build the state spine ---- */
+$("#spine").innerHTML = Object.entries(STATES).map(([k,v])=>
+  `<button class="stile" data-st="${k}" aria-pressed="false"><span class="ab">${k}</span><span class="nm">${esc(v.name)}</span></button>`).join("");
+$("#spine").addEventListener("click", e=>{
+  const b = e.target.closest(".stile"); if(!b) return;
+  S.state = b.dataset.st;
+  document.querySelectorAll(".stile").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  drawStack(); drawSections(); score();
+});
+
+/* ---- module chips ---- */
+const CHIPS = [
+ {id:"__core", label:"Core OSH Code", lock:true},
+ {id:"__cross", label:"Central hazard regime", lock:true},
+ {id:"__fire", label:"Fire", lock:true},
+ {id:"__ih", label:"Hygiene & health", lock:true},
+ {id:"__state", label:"State overlay", lock:true},
+ {id:"HAZP", label:"Hazardous process"},
+ {id:"CL", label:"Contract labour"},
+ {id:"ISMW", label:"Migrant workers"},
+ {id:"BOCW", label:"Construction"},
+ {id:"MINE", label:"Mines & quarries"},
+ {id:"PLANT", label:"Plantation"},
+ {id:"MTW", label:"Transport"}
+];
+$("#mods").innerHTML = CHIPS.map(c => c.lock
+  ? `<span class="chip locked">${esc(c.label)}</span>`
+  : `<button class="chip" data-mod="${c.id}" aria-pressed="false">${esc(c.label)}</button>`).join("");
+$("#mods").addEventListener("click", e=>{
+  const b = e.target.closest("[data-mod]"); if(!b) return;
+  S.on[b.dataset.mod] = !S.on[b.dataset.mod];
+  b.setAttribute("aria-pressed", S.on[b.dataset.mod]);
+  drawSections(); score();
+});
+
+/* ---- regulatory stack ---- */
+function drawStack(){
+  const st = STATES[S.state];
+  if(!st){ $("#stack").innerHTML = '<p style="color:var(--steel);font-size:13px;margin:0">Select a state above.</p>'; return; }
+  $("#stack").innerHTML =
+    st.stack.map(r=>`<div class="reg"><em>${esc(r.k)}</em><b>${esc(r.t)}</b><i>${esc(r.n)}</i></div>`).join("") +
+    `<div style="font-size:11.5px;color:var(--steel);margin-top:11px;line-height:1.5">
+       <b style="color:var(--ink-2)">Enforcing authority</b><br>${esc(st.dish)}<br><br>
+       <b style="color:var(--ink-2)">High-risk clusters</b><br>${esc(st.clusters)}</div>`;
+}
+
+/* ---- assemble the active section list ---- */
+function activeSections(){
+  const out = [...CORE, CROSS, FIRE, IH];
+  SECTORS.forEach(s => { if(S.on[s.id]) out.push(s); });
+  if(S.state){
+    const st = STATES[S.state];
+    out.push({id:"STATE", ix:"\u2605", title:`${st.full} \u2014 state-specific inspection regime`, state:true, items:st.items});
+  }
+  return out;
+}
+
+function drawSections(){
+  const secs = activeSections();
+  $("#sections").innerHTML = secs.map(sec=>{
+    const open = sec.id==="STATE";
+    return `<div class="sec">
+      <button class="sechd" data-sec="${sec.id}" aria-expanded="${open}">
+        <span class="ix">${sec.ix}</span><h2>${esc(sec.title)}</h2>
+        <span class="pill" id="pill-${sec.id}">0/${sec.items.length}</span>
+        <span class="car">&#9656;</span></button>
+      <div class="secbd" id="bd-${sec.id}" style="display:${open?"block":"none"}">
+        ${sec.items.map((it,i)=>{
+          const key = sec.id+"|"+i, cur = S.r[key]||{};
+          return `<div class="it ${cur.s?"st-"+cur.s:""}" id="it-${sec.id}-${i}">
+            <div>
+              <span class="ref ${sec.state?"stt":""}">${esc(it.r)}</span><span class="wt ${it.w===3?"w3":""}">W${it.w}</span>
+              <div class="req">${esc(it.q)}</div>
+              <div class="ev">${esc(it.e)}</div>
+            </div>
+            <div class="ctrl">
+              <div class="stat" data-key="${key}">
+                ${["C","NC","OBS","NA","NV"].map(v=>
+                  `<button class="sb" data-v="${v}" aria-pressed="${cur.s===v}">${v}</button>`).join("")}
+              </div>
+              <textarea class="f note" data-note="${key}" placeholder="Finding, evidence sighted, or reason for NA">${esc(cur.n||"")}</textarea>
+            </div></div>`;
+        }).join("")}
+      </div></div>`;
+  }).join("");
+  secs.forEach(s=>pill(s));
+}
+
+$("#sections").addEventListener("click", e=>{
+  const hd = e.target.closest(".sechd");
+  if(hd){ const o = hd.getAttribute("aria-expanded")==="true";
+    hd.setAttribute("aria-expanded", !o);
+    $("#bd-"+hd.dataset.sec).style.display = o?"none":"block"; return; }
+  const sb = e.target.closest(".sb");
+  if(sb){
+    const grp = sb.parentElement, key = grp.dataset.key, v = sb.dataset.v;
+    const cur = S.r[key]||{};
+    cur.s = (cur.s===v) ? null : v;
+    S.r[key] = cur;
+    grp.querySelectorAll(".sb").forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===cur.s));
+    const [sid,ix] = key.split("|");
+    const row = $("#it-"+sid+"-"+ix);
+    row.className = "it" + (cur.s?" st-"+cur.s:"");
+    const sec = activeSections().find(x=>x.id===sid); if(sec) pill(sec);
+    score();
+  }
+});
+$("#sections").addEventListener("input", e=>{
+  const t = e.target.closest("[data-note]"); if(!t) return;
+  const key = t.dataset.note; S.r[key] = S.r[key]||{}; S.r[key].n = t.value;
+});
+
+function pill(sec){
+  const done = sec.items.filter((_,i)=>S.r[sec.id+"|"+i]?.s).length;
+  const el = $("#pill-"+sec.id); if(el) el.textContent = done+"/"+sec.items.length;
+}
+
+/* ---- scoring ---- */
+function compute(){
+  const secs = activeSections();
+  let num=0, den=0, tot=0, done=0;
+  const t = {C:0,NC:0,OBS:0,NA:0,NV:0};
+  const per = [], crit = [], obsList = [], ncList = [];
+  secs.forEach(sec=>{
+    let sn=0, sd=0;
+    sec.items.forEach((it,i)=>{
+      const rec = S.r[sec.id+"|"+i]||{}, s = rec.s;
+      tot++;
+      if(!s) return;
+      done++; t[s]++;
+      const v = VAL[s];
+      if(v===null) return;
+      sn += it.w*v; sd += it.w; num += it.w*v; den += it.w;
+      const row = {sec:sec.title, ref:it.r, req:it.q, w:it.w, note:rec.n||"", status:s};
+      if(s==="NC"){ ncList.push(row); if(it.w===3) crit.push(row); }
+      if(s==="OBS") obsList.push(row);
+    });
+    per.push({id:sec.id, title:sec.title, pct: sd? Math.round(sn/sd*100) : null, assessed:sd>0});
+  });
+  const pct = den ? Math.round(num/den*100) : null;
+  return {pct, t, per, crit, ncList, obsList, tot, done, applicable:tot - t.NA};
+}
+
+function band(pct, critN){
+  if(pct===null) return {l:"Not started", c:"var(--steel)", bg:"var(--sunk)"};
+  if(critN>0)    return {l:"Critical gaps present", c:"#fff", bg:"var(--stop)"};
+  if(pct>=90)    return {l:"Strong", c:"#fff", bg:"var(--safe)"};
+  if(pct>=75)    return {l:"Adequate", c:"#fff", bg:"#4C8F6A"};
+  if(pct>=60)    return {l:"Weak", c:"#fff", bg:"var(--warn)"};
+  return {l:"Substantially non-compliant", c:"#fff", bg:"var(--stop)"};
+}
+const barCol = p => p>=90?"var(--safe)":p>=75?"#4C8F6A":p>=60?"var(--warn)":"var(--stop)";
+
+function score(){
+  const c = compute(), b = band(c.pct, c.crit.length);
+  $("#gNum").textContent = c.pct===null ? "\u2014" : c.pct;
+  const gb = $("#gBand"); gb.textContent = b.l; gb.style.background = b.bg; gb.style.color = b.c;
+  $("#gCov").textContent = `${c.done} of ${c.tot} lines assessed \u00b7 ${c.applicable} applicable`;
+  $("#tC").textContent=c.t.C; $("#tNC").textContent=c.t.NC; $("#tOBS").textContent=c.t.OBS; $("#tNA").textContent=c.t.NA;
+  $("#critFlag").innerHTML = c.crit.length
+    ? `<div class="crit">${c.crit.length} critical non-conformit${c.crit.length===1?"y":"ies"} on weight-3 lines. The band is capped until these are closed \u2014 a life-safety failure is not averaged away by good scores elsewhere.</div>` : "";
+  $("#mbars").innerHTML = c.per.filter(p=>p.assessed).map(p=>
+    `<div class="mbar"><div class="t"><b>${esc(p.title.length>32?p.title.slice(0,31)+"\u2026":p.title)}</b><span>${p.pct}%</span></div>
+     <div class="track"><i style="width:${p.pct}%;background:${barCol(p.pct)}"></i></div></div>`).join("")
+    || `<p style="font-size:12px;color:var(--steel);padding:4px 14px;margin:0">Module scores appear as you assess lines.</p>`;
+}
+
+/* ---- meta capture ---- */
+["mName","mLoc","mSector","mSize","mContract","mMigrant","mDate","mLead"].forEach(id=>{
+  $("#"+id).addEventListener("input", e => S.meta[id] = e.target.value);
+});
+$("#mDate").valueAsDate = new Date();
+S.meta.mDate = $("#mDate").value;
+
+/* ---- export / import / print ---- */
+$("#expBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify({v:1, state:S.state, on:S.on, meta:S.meta, r:S.r}, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `SLS-inspection-${(S.meta.mName||"unit").replace(/\W+/g,"-")}-${S.meta.mDate||""}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+};
+$("#impBtn").onclick = ()=>$("#impFile").click();
+$("#impFile").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    try{
+      const d = JSON.parse(rd.result);
+      S.state=d.state; Object.assign(S.on,d.on||{}); S.meta=d.meta||{}; S.r=d.r||{};
+      document.querySelectorAll(".stile").forEach(x=>x.setAttribute("aria-pressed", x.dataset.st===S.state));
+      document.querySelectorAll("[data-mod]").forEach(x=>x.setAttribute("aria-pressed", !!S.on[x.dataset.mod]));
+      Object.entries(S.meta).forEach(([k,v])=>{ const el=$("#"+k); if(el) el.value=v; });
+      drawStack(); drawSections(); score();
+    }catch(err){ alert("That file could not be read as inspection data."); }
+  };
+  rd.readAsText(f);
+};
+$("#prnBtn").onclick = ()=>window.print();
+
+/* ==========================================================================
+   AI REPORT
+   ========================================================================== */
+function md(t){
+  const rows = l => "<tr>"+l.split("|").slice(1,-1).map(c=>`<td>${c.trim()}</td>`).join("")+"</tr>";
+  const lines = t.replace(/\r/g,"").split("\n");
+  let out="", inUl=false, inOl=false, inTb=false;
+  const closeAll = ()=>{ if(inUl){out+="</ul>";inUl=false} if(inOl){out+="</ol>";inOl=false} if(inTb){out+="</tbody></table>";inTb=false} };
+  const inl = s => esc(s)
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>")
+    .replace(/`(.+?)`/g,'<code>$1</code>');
+  for(let i=0;i<lines.length;i++){
+    const L = lines[i], s = L.trim();
+    if(!s){ closeAll(); continue; }
+    if(/^\|.*\|$/.test(s) && /^\|[\s:\-|]+\|$/.test((lines[i+1]||"").trim())){
+      closeAll(); inTb=true;
+      out += "<table><thead><tr>"+s.split("|").slice(1,-1).map(c=>`<th>${inl(c.trim())}</th>`).join("")+"</tr></thead><tbody>";
+      i++; continue;
+    }
+    if(inTb && /^\|.*\|$/.test(s)){ out += "<tr>"+s.split("|").slice(1,-1).map(c=>`<td>${inl(c.trim())}</td>`).join("")+"</tr>"; continue; }
+    if(inTb){ out+="</tbody></table>"; inTb=false; }
+    let m;
+    if((m=s.match(/^(#{1,4})\s+(.*)$/))){ closeAll(); const n=Math.min(m[1].length,3); out+=`<h${n}>${inl(m[2])}</h${n}>`; continue; }
+    if((m=s.match(/^[-*]\s+(.*)$/))){ if(inOl){out+="</ol>";inOl=false} if(!inUl){out+="<ul>";inUl=true} out+=`<li>${inl(m[1])}</li>`; continue; }
+    if((m=s.match(/^\d+[.)]\s+(.*)$/))){ if(inUl){out+="</ul>";inUl=false} if(!inOl){out+="<ol>";inOl=true} out+=`<li>${inl(m[1])}</li>`; continue; }
+    closeAll(); out += `<p>${inl(s)}</p>`;
+  }
+  closeAll(); return out;
+}
+
+function deterministicBlock(c, st){
+  const b = band(c.pct, c.crit.length);
+  const m = S.meta;
+  const modLines = c.per.filter(p=>p.assessed)
+    .map(p=>`<tr><td>${esc(p.title)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${p.pct}%</td>
+      <td style="width:120px"><div class="track"><i style="width:${p.pct}%;background:${barCol(p.pct)}"></i></div></td></tr>`).join("");
+  return `
+  <h1>Inspection report</h1>
+  <p class="first">${esc(m.mName||"Unnamed establishment")} &middot; ${esc(m.mLoc||"location not recorded")} &middot; ${esc(st.full)}<br>
+  Inspected ${esc(m.mDate||"\u2014")} by ${esc(m.mLead||"\u2014")} &middot; SAFELINK SOUTH multi-state OSH inspection instrument</p>
+
+  <h2>Score</h2>
+  <p style="font-size:15px"><strong style="font-size:30px;font-family:Archivo">${c.pct===null?"\u2014":c.pct}%</strong>
+  &nbsp;<span style="background:${b.bg};color:${b.c};padding:3px 10px;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase">${b.l}</span></p>
+  <p>Weighted across ${c.applicable} applicable lines, of which ${c.done} were assessed.
+  Compliant ${c.t.C} &middot; non-conformity ${c.t.NC} &middot; observation ${c.t.OBS} &middot; not applicable ${c.t.NA} &middot; not verified ${c.t.NV}.
+  ${c.crit.length ? `<strong style="color:var(--stop)"> ${c.crit.length} critical (weight-3) non-conformities cap the band regardless of the arithmetic score.</strong>` : ""}</p>
+
+  <h2>Score by module</h2>
+  <table><thead><tr><th>Module</th><th style="text-align:right">Score</th><th></th></tr></thead><tbody>${modLines}</tbody></table>
+
+  <h2>Applicable regulatory stack &mdash; ${esc(st.full)}</h2>
+  <table><thead><tr><th style="width:120px">Layer</th><th>Instrument</th></tr></thead><tbody>
+  ${st.stack.map(r=>`<tr><td>${esc(r.k)}</td><td><strong>${esc(r.t)}</strong><br><span style="color:var(--steel);font-size:12px">${esc(r.n)}</span></td></tr>`).join("")}
+  </tbody></table>
+
+  ${c.ncList.length ? `<h2>Non-conformities</h2>
+  <table><thead><tr><th style="width:66px">Weight</th><th style="width:130px">Reference</th><th>Requirement and finding</th></tr></thead><tbody>
+  ${c.ncList.sort((a,b)=>b.w-a.w).map(n=>`<tr><td>${n.w===3?"<strong style='color:#C1272D'>Critical</strong>":"W"+n.w}</td><td><code>${esc(n.ref)}</code></td>
+    <td>${esc(n.req)}${n.note?`<br><span style="color:var(--steel);font-size:12px"><strong>Observed:</strong> ${esc(n.note)}</span>`:""}</td></tr>`).join("")}
+  </tbody></table>` : ""}
+
+  ${c.obsList.length ? `<h2>Observations</h2>
+  <table><thead><tr><th style="width:130px">Reference</th><th>Requirement and note</th></tr></thead><tbody>
+  ${c.obsList.map(n=>`<tr><td><code>${esc(n.ref)}</code></td><td>${esc(n.req)}${n.note?`<br><span style="color:var(--steel);font-size:12px">${esc(n.note)}</span>`:""}</td></tr>`).join("")}
+  </tbody></table>` : ""}
+  <h2>Assessment</h2>`;
+}
+
+function buildPrompt(c, st){
+  const m = S.meta;
+  const line = n => `- [${n.status}, weight ${n.w}] ${n.ref} \u2014 ${n.req}${n.note?` | Inspector noted: ${n.note}`:""}`;
+  return `You are writing the professional assessment section of an industrial safety inspection report for SAFELINK SOUTH, a non-profit that inspects MSMEs and industrial units across six South Indian states. The audience is the MSME owner or plant manager plus the SAFELINK technical panel. The author is a chartered process safety engineer.
+
+ESTABLISHMENT
+Name: ${m.mName||"not recorded"}
+Location / cluster: ${m.mLoc||"not recorded"}
+Sector: ${m.mSector||"not recorded"}
+State: ${st.full} (enforcing authority: ${st.dish})
+Workers on roll: ${m.mSize||"not recorded"} | Contract labour: ${m.mContract||"not recorded"} | Inter-State migrant workers: ${m.mMigrant||"not recorded"}
+Working language of the state: ${st.lang}
+Known high-risk clusters in this state: ${st.clusters}
+
+APPLICABLE REGULATORY STACK
+${st.stack.map(r=>`- ${r.k}: ${r.t} \u2014 ${r.n}`).join("\n")}
+
+RESULT
+Weighted score ${c.pct}% across ${c.applicable} applicable lines. ${c.t.C} compliant, ${c.t.NC} non-conformities, ${c.t.OBS} observations, ${c.t.NA} not applicable, ${c.t.NV} not verified.
+Critical (weight-3) non-conformities: ${c.crit.length}.
+
+MODULE SCORES
+${c.per.filter(p=>p.assessed).map(p=>`- ${p.title}: ${p.pct}%`).join("\n")}
+
+NON-CONFORMITIES
+${c.ncList.length?c.ncList.map(line).join("\n"):"None recorded."}
+
+OBSERVATIONS
+${c.obsList.length?c.obsList.map(line).join("\n"):"None recorded."}
+
+Write ONLY these four sections, in markdown, using ## headings. Do not restate the score tables \u2014 they are already rendered above your text. Be concise and specific; no filler, no praise, no disclaimers.
+
+## Overall assessment
+Three to five sentences. Name the pattern behind the findings, not a list of them. Say plainly what the state of safety management is at this unit.
+
+## Statutory exposure
+Identify which specific OSH Code 2020 sections and which ${st.full} instruments the findings put this employer in breach of, and the consequence. Use the real penalty structure: S.94 general penalty Rs.2 to 3 lakh; S.102 hazardous-process duty breaches up to 2 years imprisonment and Rs.5 lakh; S.103 a duty breach causing death up to 2 years and a fine not below Rs.5 lakh, serious injury up to 1 year and Rs.2 to 4 lakh; S.110 removes the 30-day cure period where there has been an accident or a repeat violation within three years. Be accurate and do not invent sections.
+
+## Priority actions
+A markdown table with columns: Priority | Action | Code or rule | Owner | Timeframe. Six to eight rows, hardest first. Every critical non-conformity must appear. Timeframes must be realistic for an MSME: immediate, 30 days, 90 days, 6 months.
+
+## Practical notes for an MSME
+Three to five bullets on how a resource-constrained unit can actually close these gaps \u2014 shared or cluster-level resources, ${st.lang}-language material, free or low-cost routes, and what SAFELINK SOUTH could assist with. No generic advice.`;
+}
+
+$("#genBtn").onclick = async ()=>{
+  if(!S.state){ alert("Select a state first \u2014 the report is built against that state's regulatory stack."); return; }
+  const c = compute();
+  if(c.done === 0){ alert("Assess at least a few lines before generating the report."); return; }
+  const st = STATES[S.state], btn = $("#genBtn");
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Writing report\u2026';
+
+  $("#report").innerHTML = `<div class="rep"><div class="rephd"><h2>Inspection report</h2>
+    <button class="btn ghost nprint" style="width:auto;padding:7px 13px;background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)" onclick="window.print()">Print</button></div>
+    <div class="repbd" id="repbd">${deterministicBlock(c, st)}
+    <p style="color:var(--steel)"><span class="spin" style="border-color:rgba(27,78,140,.25);border-top-color:var(--mand)"></span> Drafting the professional assessment&hellip;</p></div></div>`;
+  $("#report").scrollIntoView({behavior:"smooth", block:"start"});
+
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:1000,
+        messages:[{role:"user", content: buildPrompt(c, st)}]
+      })
+    });
+    if(!res.ok) throw new Error("The report service returned status "+res.status);
+    const data = await res.json();
+    const text = (data.content||[]).filter(x=>x.type==="text").map(x=>x.text).join("\n");
+    if(!text) throw new Error("The report service returned no text.");
+    $("#repbd").innerHTML = deterministicBlock(c, st) + md(text) +
+      `<p style="margin-top:26px;padding-top:12px;border-top:1px solid var(--hair);color:var(--steel);font-size:11.5px">
+       Scores and finding tables above are computed by the instrument. The assessment sections are drafted from those findings and must be reviewed and signed by the lead inspector before issue.
+       Verify every state citation against the current gazette. SAFELINK SOUTH &middot; SLS-INSP-001 Rev 1.0.</p>`;
+  }catch(err){
+    $("#repbd").innerHTML = deterministicBlock(c, st) +
+      `<div class="err"><strong>The assessment could not be drafted.</strong> ${esc(err.message)}
+       The scored findings above are complete and printable \u2014 write the assessment manually, or try again when you are back online.</div>`;
+  }finally{
+    btn.disabled = false; btn.textContent = "Generate inspection report";
+  }
+};
+
+/* ---- first paint ---- */
+drawSections(); score();
+</script>
